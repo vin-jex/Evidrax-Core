@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                String       @id @default(uuid()) @db.Uuid
+  email             String       @unique @db.VarChar
+  passwordHash      String       @map("password_hash") @db.VarChar
+  fullName          String?      @map("full_name") @db.VarChar
+  role              Role
+  isActive          Boolean      @default(true) @map("is_active")
+  createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamp(6)
+  resolvedAnomalies AnomalyLog[] @relation("AnomalyResolver")
+  anomalyLogs       AnomalyLog[] @relation("AnomalyUser")
+  auditLogs         AuditLog[]
+  custodyLogs       CustodyLog[]
+  evidence          Evidence[]
+
+  @@index([email], map: "ix_users_email")
+  @@map("users")
+}
+
+model Evidence {
+  id                 String       @id @default(uuid()) @db.Uuid
+  title              String       @db.VarChar
+  description        String?
+  filePath           String       @map("file_path") @db.VarChar
+  cloudinaryPublicId String       @map("cloudinary_public_id") @db.VarChar
+  originalFilename   String       @map("original_filename") @db.VarChar
+  fileSize           Float        @map("file_size")
+  mimeType           String       @map("mime_type") @db.VarChar
+  hashSha256         String       @map("hash_sha256") @db.VarChar
+  uploadedBy         String       @map("uploaded_by") @db.Uuid
+  isTampered         Boolean      @default(false) @map("is_tampered")
+  createdAt          DateTime     @default(now()) @map("created_at") @db.Timestamp(6)
+  viewUrl            String?      @map("view_url") @db.VarChar
+  anomalyLogs        AnomalyLog[]
+  custodyLogs        CustodyLog[]
+  uploader           User         @relation(fields: [uploadedBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("evidence")
+}
+
+model CustodyLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  evidenceId String   @map("evidence_id") @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  action     String   @db.VarChar
+  ipAddress  String?  @map("ip_address") @db.VarChar
+  location   String?  @db.VarChar
+  notes      String?
+  timestamp  DateTime @default(now()) @db.Timestamp(6)
+  evidence   Evidence @relation(fields: [evidenceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user       User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([timestamp], map: "ix_custody_logs_timestamp")
+  @@map("custody_logs")
+}
+
+model AuditLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String?  @map("user_id") @db.Uuid
+  action       String   @db.VarChar
+  resourceType String?  @map("resource_type") @db.VarChar
+  resourceId   String?  @map("resource_id") @db.VarChar
+  metadata     Json?    @db.Json
+  ipAddress    String?  @map("ip_address") @db.VarChar
+  timestamp    DateTime @default(now()) @db.Timestamp(6)
+  user         User?    @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([timestamp], map: "ix_audit_logs_timestamp")
+  @@map("audit_logs")
+}
+
+model AnomalyLog {
+  id         String    @id @default(uuid()) @db.Uuid
+  evidenceId String?   @map("evidence_id") @db.Uuid
+  userId     String?   @map("user_id") @db.Uuid
+  riskLevel  String    @map("risk_level") @db.VarChar
+  score      Float
+  reason     String
+  isResolved Boolean   @default(false) @map("is_resolved")
+  resolvedBy String?   @map("resolved_by") @db.Uuid
+  resolvedAt DateTime? @map("resolved_at") @db.Timestamp(6)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  evidence   Evidence? @relation(fields: [evidenceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  resolver   User?     @relation("AnomalyResolver", fields: [resolvedBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user       User?     @relation("AnomalyUser", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([createdAt], map: "ix_anomaly_logs_created_at")
+  @@map("anomaly_logs")
+}
+
+model alembic_version {
+  version_num String @id(map: "alembic_version_pkc") @db.VarChar(32)
+}
+
+enum Role {
+  ADMIN
+  INVESTIGATOR
+  AUDITOR
+
+  @@map("role")
+}
