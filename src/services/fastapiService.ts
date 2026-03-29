@@ -87,7 +87,8 @@ export async function ping(): Promise<{
 
     return {
       ok: data.status === "ok",
-      ...data,
+      service: data.service || null,
+      env: data.env || null,
     };
   } catch (err) {
     logger.error("FastAPI health check failed", {
