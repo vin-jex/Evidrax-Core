@@ -20,12 +20,12 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [
       {
-        url: "http://localhost:4000",
-        description: "Development server",
+        url: "https://evidrax-core.onrender.com",
+        description: "Production server",
       },
       {
-        url: "https://api.evidrax.io",
-        description: "Production server",
+        url: "http://localhost:4000",
+        description: "Development server",
       },
     ],
     components: {
