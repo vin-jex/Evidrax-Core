@@ -1,8 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import config from '../config';
-import prisma from '../config/prisma';
-import { User } from '@prisma/client';
+import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
+import config from "../config";
+import prisma from "../config/prisma";
+import { User } from "@prisma/client";
 
 declare global {
   namespace Express {
@@ -23,10 +23,10 @@ export async function authenticate(
   next: NextFunction,
 ): Promise<void> {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     res
       .status(401)
-      .json({ error: 'Missing or malformed Authorization header' });
+      .json({ error: "Missing or malformed Authorization header" });
     return;
   }
 
@@ -38,13 +38,13 @@ export async function authenticate(
       algorithms: [config.jwt.algorithm],
     }) as JwtPayload;
   } catch {
-    res.status(401).json({ error: 'Invalid or expired token' });
+    res.status(401).json({ error: "Invalid or expired token" });
     return;
   }
 
   const user = await prisma.user.findUnique({ where: { id: payload.sub } });
   if (!user || !user.isActive) {
-    res.status(401).json({ error: 'User not found or inactive' });
+    res.status(401).json({ error: "User not found or inactive" });
     return;
   }
 
@@ -57,12 +57,12 @@ export function requireRole(
 ): (req: Request, res: Response, next: NextFunction) => void {
   return (req, res, next) => {
     if (!req.user) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: "Not authenticated" });
       return;
     }
     if (!roles.includes(req.user.role)) {
       res.status(403).json({
-        error: `Access denied. Required role(s): ${roles.join(', ')}`,
+        error: `Access denied. Required role(s): ${roles.join(", ")}`,
       });
       return;
     }
@@ -70,6 +70,6 @@ export function requireRole(
   };
 }
 
-export const requireAdmin = requireRole('ADMIN');
-export const requireInvestigatorOrAdmin = requireRole('INVESTIGATOR', 'ADMIN');
-export const requireAnyRole = requireRole('ADMIN', 'INVESTIGATOR', 'AUDITOR');
+export const requireAdmin = requireRole("ADMIN");
+export const requireInvestigatorOrAdmin = requireRole("INVESTIGATOR", "ADMIN");
+export const requireAnyRole = requireRole("ADMIN", "INVESTIGATOR", "AUDITOR");

@@ -1,6 +1,6 @@
-import Redis from 'ioredis';
-import config from '../config';
-import logger from '../utils/logger';
+import Redis from "ioredis";
+import config from "../config";
+import logger from "../utils/logger";
 
 let client: Redis | null = null;
 let connected = false;
@@ -14,14 +14,14 @@ export function getRedis(): Redis {
     enableOfflineQueue: false,
   });
 
-  client.on('connect', () => {
+  client.on("connect", () => {
     connected = true;
-    logger.info('Redis connected');
+    logger.info("Redis connected");
   });
 
-  client.on('error', (err: Error) => {
+  client.on("error", (err: Error) => {
     connected = false;
-    logger.warn('Redis unavailable - running without cache', {
+    logger.warn("Redis unavailable - running without cache", {
       error: err.message,
     });
   });

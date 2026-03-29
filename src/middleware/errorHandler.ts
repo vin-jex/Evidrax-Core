@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import logger from '../utils/logger';
+import { Request, Response, NextFunction } from "express";
+import logger from "../utils/logger";
 
 export interface AppError extends Error {
   statusCode?: number;
@@ -21,28 +21,26 @@ export function errorHandler(
     return;
   }
 
-  if (err.code === 'P2002') {
-    res.status(409).json({ error: 'A record with that value already exists.' });
+  if (err.code === "P2002") {
+    res.status(409).json({ error: "A record with that value already exists." });
     return;
   }
-  if (err.code === 'P2025') {
-    res.status(404).json({ error: 'Record not found.' });
+  if (err.code === "P2025") {
+    res.status(404).json({ error: "Record not found." });
     return;
   }
 
   if (err.array) {
-    res
-      .status(422)
-      .json({ error: 'Validation failed', details: err.array() });
+    res.status(422).json({ error: "Validation failed", details: err.array() });
     return;
   }
 
-  logger.error('Unhandled error', {
+  logger.error("Unhandled error", {
     message: err.message,
     stack: err.stack,
     path: req.path,
   });
-  res.status(500).json({ error: 'Internal server error' });
+  res.status(500).json({ error: "Internal server error" });
 }
 
 export function createError(statusCode: number, message: string): AppError {

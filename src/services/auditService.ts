@@ -1,4 +1,5 @@
-import prisma from '../config/prisma';
+import { Prisma } from "@prisma/client";
+import prisma from "../config/prisma";
 
 interface LogParams {
   action: string;
@@ -28,14 +29,14 @@ interface QueryParams {
   limit?: number;
 }
 
-export async function log(params: LogParams = { action: '' }) {
+export async function log(params: LogParams = { action: "" }) {
   return prisma.auditLog.create({
     data: {
       action: params.action,
       userId: params.userId ?? null,
       resourceType: params.resourceType ?? null,
       resourceId: params.resourceId ? String(params.resourceId) : null,
-      metadata: params.metadata ?? {},
+      metadata: (params.metadata as Prisma.JsonValue) ?? {},
       ipAddress: params.ipAddress ?? null,
     },
   });
@@ -55,11 +56,19 @@ export async function logCustody(params: CustodyParams) {
 }
 
 export async function queryAuditLogs(params: QueryParams = {}) {
-  const { userId, action, resourceType, fromDate, toDate, skip = 0, limit = 50 } = params;
+  const {
+    userId,
+    action,
+    resourceType,
+    fromDate,
+    toDate,
+    skip = 0,
+    limit = 50,
+  } = params;
 
   const where: Record<string, unknown> = {};
   if (userId) where.userId = userId;
-  if (action) where.action = { contains: action, mode: 'insensitive' };
+  if (action) where.action = { contains: action, mode: "insensitive" };
   if (resourceType) where.resourceType = resourceType;
   if (fromDate || toDate) {
     const ts: Record<string, Date> = {};
@@ -72,7 +81,7 @@ export async function queryAuditLogs(params: QueryParams = {}) {
     prisma.auditLog.count({ where }),
     prisma.auditLog.findMany({
       where,
-      orderBy: { timestamp: 'desc' },
+      orderBy: { timestamp: "desc" },
       skip: Number(skip),
       take: Math.min(Number(limit), 200),
     }),
