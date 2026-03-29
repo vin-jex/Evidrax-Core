@@ -1,13 +1,13 @@
 # Evidrax-Core - Node.js API
 
-> Forensic Evidence Security Platform · TypeScript · Express · Prisma · OpenAI
+> Forensic Evidence Security Platform · TypeScript · Express · Prisma · Swagger
 
 ## Architecture
 
 ```
 Next.js (UI)
     ↓
-Evidrax-Core (Node API)  ←── Auth · DB · Business Logic · Cloudinary · OpenAI
+Evidrax-Core (Node API)  ←── Auth · DB · Business Logic · Cloudinary · Swagger Docs
     ↓
 FastAPI                  ←── Anomaly scoring only (stateless, no DB)
 ```
@@ -35,7 +35,7 @@ It receives log data and returns scores. Evidrax-Core persists the results.
 ## Setup
 
 ```bash
-cp .env.example .env        # fill in DB, Cloudinary, JWT secret, Resend & OpenAI keys
+cp .env.example .env        # fill in DB, Cloudinary, JWT secret, and Resend key
 pnpm install
 pnpm generate               # generate Prisma client
 pnpm migrate                # run migrations
@@ -68,8 +68,6 @@ pnpm start    # node dist/server.js
 | `CLOUDINARY_CLOUD_NAME` | ✅        | Cloudinary cloud name               |
 | `CLOUDINARY_API_KEY`    | ✅        | Cloudinary API key                  |
 | `CLOUDINARY_API_SECRET` | ✅        | Cloudinary API secret               |
-| `OPENAI_API_KEY`        | ✅        | OpenAI API key                      |
-| `OPENAI_MODEL`          | –         | Model to use (default: `gpt-4o`)   |
 | `RESEND_API_KEY`        | –         | Resend key for email alerts         |
 | `ALERT_EMAIL_FROM`      | –         | Sender address for alerts           |
 | `ALERT_EMAIL_TO`        | –         | Recipient address for alerts        |
@@ -99,6 +97,11 @@ pnpm start    # node dist/server.js
 | PATCH  | `/api/ai/anomalies/:id/resolve`   | ADMIN                         |
 | GET    | `/api/logs/audit`                 | Any*                          |
 | POST   | `/api/logs/access`                | Any                           |
+| GET    | `/api/stats/overview`             | ADMIN                         |
+| GET    | `/api/stats/evidence`             | ADMIN                         |
+| GET    | `/api/stats/users`                | ADMIN                         |
+| GET    | `/api/stats/anomalies`            | Any                           |
+| GET    | `/api/stats/activity`             | Any                           |
 | GET    | `/api/admin/users`                | ADMIN                         |
 | PATCH  | `/api/admin/users/:id`            | ADMIN                         |
 | DELETE | `/api/admin/users/:id`            | ADMIN                         |
@@ -116,22 +119,20 @@ pnpm test:watch        # watch mode
 pnpm test:coverage     # with coverage report
 ```
 
-All external dependencies (Prisma, Redis, Cloudinary, FastAPI, Resend, OpenAI) are mocked in `tests/setup.ts`.
+All external dependencies (Prisma, Redis, Cloudinary, FastAPI, Resend) are mocked in `tests/setup.ts`.
 
 ---
 
-## OpenAI Integration
+## Swagger / OpenAPI Docs
 
-Evidrax-Core ships with the `openai` SDK pre-configured. The API key and model are resolved from `.env` via `src/config/index.ts`:
+Interactive API documentation is served automatically when the server starts.
 
-```ts
-import OpenAI from 'openai';
-import config from '../config';
+| URL | Description |
+|-----|-------------|
+| `http://localhost:4000/docs` | Swagger UI (interactive browser) |
+| `http://localhost:4000/docs.json` | Raw OpenAPI 3.0 spec (JSON) |
 
-const openai = new OpenAI({ apiKey: config.openai.apiKey });
-```
-
-Use `config.openai.model` for the model string.
+All routes are annotated with `@openapi` JSDoc comments in `src/routes/*.ts`. The spec is generated at startup via `swagger-jsdoc` and mounted with `swagger-ui-express`. The Swagger UI topbar is styled to match the Evidrax-Core brand.
 
 ---
 
@@ -144,5 +145,5 @@ Use `config.openai.model` for the model string.
 - **Storage**: Cloudinary (`resource_type: raw`)
 - **Auth**: bcrypt + JWT
 - **Email**: Resend
-- **AI SDK**: OpenAI
+- **Docs**: swagger-jsdoc + swagger-ui-express (OpenAPI 3.0)
 - **Tests**: Jest + ts-jest + supertest + jest-mock-extended
