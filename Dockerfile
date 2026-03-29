@@ -4,24 +4,28 @@ WORKDIR /app
 
 RUN apk add --no-cache dumb-init
 
-COPY package*.json ./
-RUN npm ci
+# install pnpm
+RUN corepack enable
+
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
 COPY . .
 RUN npx prisma generate
-RUN npm run build
+RUN pnpm build
 
-# ── Production ─────────────────────────────────────────
+# ── Production ─────────────────────────
 FROM node:20-alpine
 
 WORKDIR /app
 
 RUN apk add --no-cache dumb-init
+RUN corepack enable
 
 ENV NODE_ENV=production
 
-COPY package*.json ./
-RUN npm ci --omit=dev
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --prod --frozen-lockfile
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
