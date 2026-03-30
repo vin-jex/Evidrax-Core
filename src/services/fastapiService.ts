@@ -40,7 +40,7 @@ export interface AnalyzeResult {
 
 const client = axios.create({
   baseURL: config.fastapi.baseUrl,
-  timeout: 30_000,
+  timeout: 1000_000,
   headers: { "Content-Type": "application/json" },
 });
 
