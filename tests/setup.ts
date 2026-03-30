@@ -16,8 +16,8 @@ jest.mock("../src/config/redis", () => ({
 
 jest.mock("../src/services/storageService", () => ({
   uploadFile: jest.fn().mockResolvedValue({
-    url: "https://res.cloudinary.com/test/raw/upload/v1/evidrax-core/test.pdf",
-    publicId: "evidrax-core/test",
+    url: "https://res.cloudinary.com/test/raw/upload/v1/forensics/test.pdf",
+    publicId: "forensics/test",
     sha256: "abc123def456abc123def456abc123def456abc123def456abc123def456abc1",
     fileSize: 1024,
   }),

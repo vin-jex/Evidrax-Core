@@ -54,8 +54,8 @@ export function makeEvidence(overrides: Record<string, unknown> = {}) {
     title: "Test Evidence",
     description: "A test file",
     filePath:
-      "https://res.cloudinary.com/test/raw/upload/v1/evidrax-core/test.pdf",
-    cloudinaryPublicId: "evidrax-core/test",
+      "https://res.cloudinary.com/test/raw/upload/v1/forensics/test.pdf",
+    cloudinaryPublicId: "forensics/test",
     originalFilename: "test.pdf",
     fileSize: 2048,
     mimeType: "application/pdf",

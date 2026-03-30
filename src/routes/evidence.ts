@@ -11,7 +11,7 @@ import { upload } from "../middleware/upload";
 import * as evidenceService from "../services/evidenceService";
 import { createError } from "../middleware/errorHandler";
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 /**
  * @openapi

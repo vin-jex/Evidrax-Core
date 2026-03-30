@@ -1,15 +1,14 @@
-import type { Router as ExpressRouter } from "express";
-import { Router } from "express";
-import { body, param } from "express-validator";
-import { validate } from "../middleware/validate";
-import { authenticate, requireAdmin } from "../middleware/auth";
-import prisma from "../config/prisma";
-import * as auditService from "../services/auditService";
-import * as fastapiService from "../services/fastapiService";
-import { sendAccountDisabledEmail } from "../services/alertService";
-import { createError } from "../middleware/errorHandler";
+import { Router } from 'express';
+import { body, param } from 'express-validator';
+import { validate } from '../middleware/validate';
+import { authenticate, requireAdmin } from '../middleware/auth';
+import prisma from '../config/prisma';
+import * as auditService from '../services/auditService';
+import * as fastapiService from '../services/fastapiService';
+import { sendAccountDisabledEmail } from '../services/alertService';
+import { createError } from '../middleware/errorHandler';
 
-const router: ExpressRouter = Router();
+const router = Router();
 
 /**
  * @openapi
@@ -28,17 +27,10 @@ const router: ExpressRouter = Router();
  *       401: { $ref: '#/components/responses/Unauthorized' }
  *       403: { $ref: '#/components/responses/Forbidden' }
  */
-router.get("/users", authenticate, requireAdmin, async (_req, res) => {
+router.get('/users', authenticate, requireAdmin, async (_req, res) => {
   const users = await prisma.user.findMany({
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      email: true,
-      fullName: true,
-      role: true,
-      isActive: true,
-      createdAt: true,
-    },
+    orderBy: { createdAt: 'desc' },
+    select: { id: true, email: true, fullName: true, role: true, isActive: true, createdAt: true },
   });
   res.json(users);
 });
@@ -74,21 +66,17 @@ router.get("/users", authenticate, requireAdmin, async (_req, res) => {
  *       404: { $ref: '#/components/responses/NotFound' }
  */
 router.patch(
-  "/users/:id",
+  '/users/:id',
   authenticate,
   requireAdmin,
-  param("id").isUUID(),
-  body("fullName").optional().trim(),
-  body("isActive").optional().isBoolean(),
-  body("role").optional().isIn(["ADMIN", "INVESTIGATOR", "AUDITOR"]),
+  param('id').isUUID(),
+  body('fullName').optional().trim(),
+  body('isActive').optional().isBoolean(),
+  body('role').optional().isIn(['ADMIN', 'INVESTIGATOR', 'AUDITOR']),
   validate,
   async (req, res) => {
     const { id } = req.params;
-    const { fullName, isActive, role } = req.body as {
-      fullName?: string;
-      isActive?: boolean;
-      role?: string;
-    };
+    const { fullName, isActive, role } = req.body as { fullName?: string; isActive?: boolean; role?: string };
 
     const data: Record<string, unknown> = {};
     if (fullName !== undefined) data.fullName = fullName;
@@ -96,25 +84,14 @@ router.patch(
     if (role !== undefined) data.role = role;
 
     const user = await prisma.user.update({
-      where: { id },
-      data,
-      select: {
-        id: true,
-        email: true,
-        fullName: true,
-        role: true,
-        isActive: true,
-        createdAt: true,
-      },
+      where: { id }, data,
+      select: { id: true, email: true, fullName: true, role: true, isActive: true, createdAt: true },
     });
 
     await auditService.log({
-      action: "USER_UPDATED",
-      userId: req.user.id,
-      resourceType: "user",
-      resourceId: id,
-      metadata: data,
-      ipAddress: req.ip,
+      action: 'USER_UPDATED', userId: req.user.id,
+      resourceType: 'user', resourceId: id,
+      metadata: data, ipAddress: req.ip,
     });
 
     res.json(user);
@@ -139,33 +116,23 @@ router.patch(
  *       403: { $ref: '#/components/responses/Forbidden' }
  */
 router.delete(
-  "/users/:id",
+  '/users/:id',
   authenticate,
   requireAdmin,
-  param("id").isUUID(),
+  param('id').isUUID(),
   validate,
   async (req, res) => {
     const { id } = req.params;
-    if (id === req.user.id)
-      throw createError(400, "Cannot deactivate your own account");
+    if (id === req.user.id) throw createError(400, 'Cannot deactivate your own account');
 
-    const target = await prisma.user.update({
-      where: { id },
-      data: { isActive: false },
-    });
+    const target = await prisma.user.update({ where: { id }, data: { isActive: false } });
 
     // Notify the deactivated user by email (fire-and-forget)
-    sendAccountDisabledEmail({
-      email: target.email,
-      fullName: target.fullName,
-    });
+    sendAccountDisabledEmail({ email: target.email, fullName: target.fullName });
 
     await auditService.log({
-      action: "USER_DEACTIVATED",
-      userId: req.user.id,
-      resourceType: "user",
-      resourceId: id,
-      ipAddress: req.ip,
+      action: 'USER_DEACTIVATED', userId: req.user.id,
+      resourceType: 'user', resourceId: id, ipAddress: req.ip,
     });
     res.status(204).send();
   },
@@ -213,17 +180,10 @@ router.delete(
  *       401: { $ref: '#/components/responses/Unauthorized' }
  *       403: { $ref: '#/components/responses/Forbidden' }
  */
-router.get("/stats", authenticate, requireAdmin, async (_req, res) => {
+router.get('/stats', authenticate, requireAdmin, async (_req, res) => {
   const [
-    totalEvidence,
-    tamperedCount,
-    totalUsers,
-    activeUsers,
-    totalAuditLogs,
-    totalCustodyEvents,
-    openAnomalies,
-    recentAlerts,
-    fastapiStatus,
+    totalEvidence, tamperedCount, totalUsers, activeUsers,
+    totalAuditLogs, totalCustodyEvents, openAnomalies, recentAlerts, fastapiStatus,
   ] = await Promise.all([
     prisma.evidence.count(),
     prisma.evidence.count({ where: { isTampered: true } }),
@@ -233,8 +193,8 @@ router.get("/stats", authenticate, requireAdmin, async (_req, res) => {
     prisma.custodyLog.count(),
     prisma.anomalyLog.count({ where: { isResolved: false } }),
     prisma.auditLog.findMany({
-      where: { action: { in: ["TAMPER_DETECTED", "ANOMALY_DETECTED"] } },
-      orderBy: { timestamp: "desc" },
+      where: { action: { in: ['TAMPER_DETECTED', 'ANOMALY_DETECTED'] } },
+      orderBy: { timestamp: 'desc' },
       take: 5,
       select: { action: true, timestamp: true, metadata: true },
     }),
@@ -242,16 +202,8 @@ router.get("/stats", authenticate, requireAdmin, async (_req, res) => {
   ]);
 
   res.json({
-    evidence: {
-      total: totalEvidence,
-      tampered: tamperedCount,
-      clean: totalEvidence - tamperedCount,
-    },
-    users: {
-      total: totalUsers,
-      active: activeUsers,
-      inactive: totalUsers - activeUsers,
-    },
+    evidence: { total: totalEvidence, tampered: tamperedCount, clean: totalEvidence - tamperedCount },
+    users: { total: totalUsers, active: activeUsers, inactive: totalUsers - activeUsers },
     audit: { totalEvents: totalAuditLogs, custodyEvents: totalCustodyEvents },
     anomalies: { open: openAnomalies },
     recentAlerts,

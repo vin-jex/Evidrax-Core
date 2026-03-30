@@ -1,4 +1,4 @@
-# Evidrax-Core - Node.js API
+# Evidrax-Core — Node.js API
 
 > Forensic Evidence Security Platform · TypeScript · Express · Prisma · Swagger
 
@@ -19,7 +19,7 @@ FastAPI                  ←── Anomaly scoring only (stateless, no DB)
 | Password hashing     | Evidrax-Core   | `src/services/authService.ts`         |
 | Role enforcement     | Evidrax-Core   | `src/middleware/auth.ts`              |
 | DB schema            | Evidrax-Core   | `prisma/schema.prisma`                |
-| DB migrations        | Evidrax-Core   | Prisma only - no SQLAlchemy           |
+| DB migrations        | Evidrax-Core   | Prisma only — no SQLAlchemy           |
 | Evidence upload      | Evidrax-Core   | `src/services/evidenceService.ts`     |
 | SHA-256 integrity    | Evidrax-Core   | `src/services/storageService.ts`      |
 | Audit + custody logs | Evidrax-Core   | `src/services/auditService.ts`        |
@@ -82,8 +82,8 @@ pnpm start    # node dist/server.js
 
 | Method | Path                              | Role                          |
 |--------|-----------------------------------|-------------------------------|
-| POST   | `/api/auth/bootstrap`             | -                             |
-| POST   | `/api/auth/login`                 | -                             |
+| POST   | `/api/auth/bootstrap`             | —                             |
+| POST   | `/api/auth/login`                 | —                             |
 | POST   | `/api/auth/register`              | ADMIN                         |
 | GET    | `/api/auth/me`                    | Any                           |
 | POST   | `/api/evidence`                   | INVESTIGATOR, ADMIN           |
@@ -111,6 +111,42 @@ pnpm start    # node dist/server.js
 
 ---
 
+## Seed (Mock Data)
+
+Run the seed script to populate your database with realistic test data:
+
+```bash
+pnpm seed
+```
+
+This creates:
+
+| Entity | Count | Details |
+|---|---|---|
+| Users | 4 | 1 Admin, 2 Investigators, 1 Auditor |
+| Evidence | 8 | PDF, JPEG, ZIP, CSV, BIN — 1 tampered |
+| Custody logs | 21 | Full lifecycle per evidence item |
+| Audit logs | 30+ | Every action type covered |
+| Anomaly logs | 5 | Low / Medium / High / Critical — 1 resolved |
+
+**Seeded credentials:**
+
+| Email | Password | Role |
+|---|---|---|
+| `admin@evidrax.io` | `Admin@Evidrax123!` | ADMIN |
+| `james.okafor@evidrax.io` | `Investigator@1Pass!` | INVESTIGATOR |
+| `amara.nwosu@evidrax.io` | `Investigator@2Pass!` | INVESTIGATOR |
+| `chidi.eze@evidrax.io` | `Auditor@Evidrax123!` | AUDITOR |
+
+Quick login test after seeding:
+```bash
+curl -X POST http://localhost:4000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@evidrax.io","password":"Admin@Evidrax123!"}'
+```
+
+---
+
 ## Tests
 
 ```bash
@@ -118,6 +154,17 @@ pnpm test              # run all tests
 pnpm test:watch        # watch mode
 pnpm test:coverage     # with coverage report
 ```
+
+Test files and what they cover:
+
+| File | Endpoints covered |
+|---|---|
+| `tests/auth.test.ts` | Bootstrap, Login, Register, Me — all role + error paths |
+| `tests/evidence.test.ts` | Upload, List, Get, Verify (valid + tampered), Custody chain |
+| `tests/ai.test.ts` | Analyze (normal + anomaly detected), Train, Get anomalies, Resolve |
+| `tests/logs.test.ts` | Audit query (all roles, scoping, filtering), Write access event |
+| `tests/admin.test.ts` | List users, Update user, Deactivate user, Admin stats |
+| `tests/stats.test.ts` | Overview, Evidence stats, User stats, Anomaly stats, Activity timeline |
 
 All external dependencies (Prisma, Redis, Cloudinary, FastAPI, Resend) are mocked in `tests/setup.ts`.
 
@@ -141,7 +188,7 @@ All routes are annotated with `@openapi` JSDoc comments in `src/routes/*.ts`. Th
 - **Runtime**: Node.js 20 + TypeScript
 - **Framework**: Express 4
 - **ORM**: Prisma 7 (PostgreSQL via `@prisma/adapter-pg`)
-- **Cache**: Redis (ioredis) - optional, fails silently
+- **Cache**: Redis (ioredis) — optional, fails silently
 - **Storage**: Cloudinary (`resource_type: raw`)
 - **Auth**: bcrypt + JWT
 - **Email**: Resend

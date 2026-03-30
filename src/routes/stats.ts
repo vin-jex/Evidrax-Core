@@ -220,10 +220,7 @@ router.get(
       byDay[day] = (byDay[day] ?? 0) + 1;
     }
 
-    const totalSize = recent.reduce(
-      (sum: number, e: { fileSize: number }) => sum + e.fileSize,
-      0,
-    );
+    const totalSize = recent.reduce((sum, e) => sum + e.fileSize, 0);
 
     res.json({
       total,
@@ -237,12 +234,10 @@ router.get(
       uploadedInPeriod: recent.length,
       totalStorageMb: (totalSize / (1024 * 1024)).toFixed(2),
       uploadsByDay: byDay,
-      mimeBreakdown: mimeBreakdown.map(
-        (m: { mimeType: string; _count: { _all: number } }) => ({
-          mimeType: m.mimeType,
-          count: m._count._all,
-        }),
-      ),
+      mimeBreakdown: mimeBreakdown.map((m) => ({
+        mimeType: m.mimeType,
+        count: m._count._all,
+      })),
     });
   },
 );
@@ -286,12 +281,7 @@ router.get("/users", authenticate, requireAdmin, async (_req, res) => {
     active,
     inactive: total - active,
     newLast30Days: newUsersLast30d,
-    byRole: Object.fromEntries(
-      byRole.map((r: { role: string; _count: { _all: number } }) => [
-        r.role,
-        r._count._all,
-      ]),
-    ),
+    byRole: Object.fromEntries(byRole.map((r) => [r.role, r._count._all])),
     recentLogins,
   });
 });
@@ -343,19 +333,13 @@ router.get("/anomalies", authenticate, requireAnyRole, async (_req, res) => {
     resolved,
     newLast7Days: last7dCount,
     byRiskLevel: Object.fromEntries(
-      byRisk.map(
-        (r: {
-          riskLevel: string;
-          _count: { _all: number };
-          _avg: { score: number | null };
-        }) => [
-          r.riskLevel,
-          {
-            count: r._count._all,
-            avgScore: Number(r._avg.score?.toFixed(3) ?? 0),
-          },
-        ],
-      ),
+      byRisk.map((r) => [
+        r.riskLevel,
+        {
+          count: r._count._all,
+          avgScore: Number(r._avg.score?.toFixed(3) ?? 0),
+        },
+      ]),
     ),
     topOffenders,
   });
@@ -411,29 +395,15 @@ router.get(
       byDay[day] = (byDay[day] ?? 0) + 1;
     }
 
-    interface TopAction {
-      action: string;
-      _count: { _all: number };
-    }
-
-    interface ActivityResponse {
-      period: string;
-      totalEvents: number;
-      byDay: Record<string, number>;
-      topActions: { action: string; count: number }[];
-    }
-
-    const response: ActivityResponse = {
+    res.json({
       period: `${days}d`,
       totalEvents: logs.length,
       byDay,
-      topActions: topActions.map((a: TopAction) => ({
+      topActions: topActions.map((a) => ({
         action: a.action,
         count: a._count._all,
       })),
-    };
-
-    res.json(response);
+    });
   },
 );
 

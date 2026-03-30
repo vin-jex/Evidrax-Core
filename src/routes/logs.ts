@@ -16,6 +16,12 @@ const router: ExpressRouter = Router();
  *     description: Investigators can only see their own audit trail. Admins and Auditors see all.
  *     parameters:
  *       - in: query
+ *   get:
+ *     tags: [Logs]
+ *     summary: Query audit logs
+ *     description: Investigators can only see their own audit trail. Admins and Auditors see all.
+ *     parameters:
+ *       - in: query
  *         name: userId
  *         schema: { type: string, format: uuid }
  *       - in: query
